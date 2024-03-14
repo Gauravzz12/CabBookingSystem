@@ -8,6 +8,7 @@ function Cabs() {
   const [updatedCabData, setUpdatedCabData] = useState({
     cabId: '',
     price: 0,
+    currentPosition: '',
     isBooked: false
   });
 
@@ -67,8 +68,9 @@ function Cabs() {
       
       {cabs.map((cab, index) => (
         <div key={index} className="card">
-          <h2>{cab.cabId}</h2>
+          <h2>{cab.cabId.toUpperCase()}</h2>
           <p>Price: {cab.price}</p>
+          <p>Position: {cab.currentPosition}</p>
           <p>Status: {cab.isBooked ? 'Booked' : 'Available'}</p>
           <button onClick={() => handleUpdate(cab)}>Update</button>
         </div>
@@ -96,16 +98,15 @@ function Cabs() {
                 onChange={handleInputChange}
                 required
               />
-              <label>Status:</label>
-              <select
-                name="isBooked"
-                value={updatedCabData.isBooked}
+              <label>Position</label>
+              <input
+                type="text"
+                name="currentPosition"
+                value={updatedCabData.currentPosition}
                 onChange={handleInputChange}
-                required
-              >
-                <option value={false}>Available</option>
-                <option value={true}>Booked</option>
-              </select>
+                required  
+              />
+          
               <button type="submit" onClick={handleSubmit}>Submit</button>
             </form>
           </div>
