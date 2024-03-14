@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./Book.css";
 import Logo from "../assets/Logo.jpg";
 
-function Book() {
+function Book() { 
   const [cabs, setCabs] = useState([]);
-
- 
+  const [shortestDistance, setShortestDistance] = useState(null);
 
   function findShortestDistance(locations, src, dest) {
     const distances = {};
@@ -45,22 +44,23 @@ function Book() {
       });
     }
 
-    return distances[dest];
+    setShortestDistance(distances[dest]);
   }
 
   const showcabs = (e) => {
     getlocation();
-    e.preventDefault();
   };
 
-  function getCabs(shortestDistance) {
-    axios.get("http://localhost:5000/cabs")
+  function getCabs() {
+    axios
+      .get("http://localhost:5000/cabs")
       .then((res) => res.data)
       .then((data) => {
         console.log(shortestDistance);
         if (shortestDistance !== null) {
-          const updatedCabData = data[0].cabs.map((cab) => ({ 
+          const updatedCabData = data.map((cab) => ({
             cab: cab.cabId,
+            price: cab.price,
             fare: cab.price * shortestDistance,
           }));
           setCabs(updatedCabData);
@@ -71,28 +71,38 @@ function Book() {
         console.error("Error fetching cabs:", error);
       });
   }
-  
 
- function getlocation() {
-  axios.get("http://localhost:5000/location")
-    .then((res) => res.data)
-    .then((data) => {
-      const pickupLocation = document.getElementById("pickup").value;
-      const dropoffLocation = document.getElementById("dropoff").value;
-      if(pickupLocation === dropoffLocation) {
-        alert('Pickup and Dropoff locations cannot be same');
-      } 
-      else{
-      const distance = findShortestDistance(data[0].locations, pickupLocation, dropoffLocation);
-      console.log("Shortest distance:", distance);
-      getCabs(distance);
-      }
-    })
-    .catch((error) => {
-      console.error("Error fetching locations:", error);
-    });
-}
+  function getlocation() {
+    axios
+      .get("http://localhost:5000/location")
+      .then((res) => res.data)
+      .then((data) => {
+        const pickupLocation = document.getElementById("pickup").value;
+        const dropoffLocation = document.getElementById("dropoff").value;
+        if (pickupLocation === dropoffLocation) {
+          alert("Pickup and Dropoff locations cannot be same");
+        } else {
+          findShortestDistance(
+            data[0].locations,
+            pickupLocation,
+            dropoffLocation
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching locations:", error);
+      });
+  }
 
+  function BookCab(index){
+    alert ("Cab Booked: " + cabs[index].cab);
+  }
+
+  useEffect(() => {
+    if (shortestDistance !== null) {
+      getCabs();
+    }
+  }, [shortestDistance]);
 
   return (
     <div>
@@ -103,11 +113,9 @@ function Book() {
           <input type="text" id="name" name="name" required />
           <label htmlFor="email">Email:</label>
           <input type="email" id="email" name="email" required />
+
           <label htmlFor="pickup">Pickup Location:</label>
           <select id="pickup" name="pickup" required defaultValue="">
-            <option value="" disabled hidden>
-              Pickup
-            </option>
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
@@ -117,9 +125,7 @@ function Book() {
           </select>
           <label htmlFor="dropoff">Drop-off Location:</label>
           <select id="dropoff" name="dropoff" required defaultValue="">
-            <option value="" disabled hidden>
-              Drop-off
-            </option>
+            
             <option value="A">A</option>
             <option value="B">B</option>
             <option value="C">C</option>
@@ -131,20 +137,36 @@ function Book() {
             Book Now
           </button>
         </form>
-
         <div className="image-container">
           <img src={Logo} alt="Logo" />
         </div>
       </div>
-
       <div className="Bookings">
-        {cabs.map((data, index) => (
-          <div key={index}>
-            <p>
-              {data.cab} - Fare: {data.fare} - <button>Book</button>
-            </p>
-          </div>
-        ))}
+        <h2>Estimated Time :  {shortestDistance}</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Sr.No</th>
+              <th>Cab</th>
+              <th>Price/minute</th>
+              <th>Total Fare</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cabs.map((data, index) => (
+              <tr key={index}>
+                <th>{index+1}</th>
+                <th>{data.cab}</th>
+                <th>{data.price}</th>
+                <th>{data.fare}</th>
+                <th>
+                <button onClick={() => BookCab(index)}>Book</button>
+                </th>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
