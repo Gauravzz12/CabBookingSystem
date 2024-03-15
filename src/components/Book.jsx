@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./Book.css";
 import Logo from "../assets/Logo.jpg";
+import moment from "moment";
 
 function Book() {
   const [cabs, setCabs] = useState([]);
@@ -9,7 +10,6 @@ function Book() {
   const [shortestTime, setShortestTime] = useState(null);
   const [srcdest, setSrcDest] = useState([]);
   const [showBookings, setShowBookings] = useState(false);
-
   function findShortestTime(locations, src, dest) {
     const time = {};
     const visited = {};
@@ -79,6 +79,7 @@ function Book() {
         const dropoffLocation = document.getElementById("dropoff").value;
         if (pickupLocation === dropoffLocation) {
           alert("Pickup and Dropoff locations cannot be same");
+          return;
         } else {
           setSrcDest([pickupLocation, dropoffLocation]);
           const time = findShortestTime(
@@ -96,39 +97,55 @@ function Book() {
 
   function BookCab(cabId) {
     setShowBookings(false);
-
+    getCabs();
     const name = document.getElementById("name").value;
     const email = document.getElementById("email").value;
     const pickupLocation = document.getElementById("pickup").value;
     const dropoffLocation = document.getElementById("dropoff").value;
-
-    let bookingTime = new Date().toLocaleString();
+    const bookingTime = document.getElementById("time").value;
+    const currPos = cabs.find((cab) => cab.cabId === cabId).currentPosition;
+    const arrivalTime = findShortestTime(locations, pickupLocation, currPos);
+    const endTime = moment(bookingTime, "HH:mm")
+      .add(shortestTime, "minutes")
+      .add(arrivalTime, "minutes")
+      .format("HH:mm");
+      console.log(cabs);
+    if (cabs.find((cab) => cab.cabId === cabId).isBooked=="Booked") {
+      alert("This cab is already booked. Please choose another one.");
+      return;
+    }
+  
     const newBooking = {
-        cabId,
-        name,
-        email,
-        source: pickupLocation,
-        destination: dropoffLocation,
-        bookingTime,
+      cabId,
+      name,
+      email,
+      source: pickupLocation,
+      destination: dropoffLocation,
+      bookingTime,
+      endTime,
     };
-
+  
     axios
-        .post("http://localhost:5000/bookings", newBooking)
-        .then((res) => {
-            alert("Booking successful!");
-
-            getCabs();
-
-            document.getElementById("name").value = "";
-            document.getElementById("email").value = "";
-            document.getElementById("pickup").value = "";
-            document.getElementById("dropoff").value = "";
-        })
-        .catch((error) => {
-            console.error("Error booking cab:", error);
+      .post("http://localhost:5000/bookings", newBooking)
+      .then((res) => {
+        alert("Booking successful!");
+        document.getElementById("name").value = "";
+        document.getElementById("email").value = "";
+        document.getElementById("pickup").value = "";
+        document.getElementById("dropoff").value = "";
+        document.getElementById("time").value = "";
+  
+        axios.put(`http://localhost:5000/cabs/update/${cabs.find((cab) => cab.cabId === cabId)._id}`, {
+          isBooked: "Booked",
         });
-}
-
+  
+        getCabs();
+      })
+      .catch((error) => {
+        console.error("Error booking cab:", error);
+      });
+  }
+  
 
   useEffect(() => {
     if (shortestTime !== null) {
@@ -145,6 +162,9 @@ function Book() {
           <input type="text" id="name" name="name" required />
           <label htmlFor="email">Email:</label>
           <input type="email" id="email" name="email" required />
+          <label htmlFor="time">Time:</label>
+          <input type="time" id="time" name="time" required />
+
           <label htmlFor="pickup">Pickup Location:</label>
           <select id="pickup" name="pickup" required defaultValue="">
             <option value="A">A</option>
@@ -161,50 +181,49 @@ function Book() {
             <option value="D">D</option>
             <option value="E">E</option>
           </select>
-          <button >
-            Book Now
-          </button>
+          <button>Book Now</button>
         </form>
         <div className="image-container">
           <img src={Logo} alt="Logo" />
         </div>
       </div>
-      {showBookings && ( 
+      {showBookings && (
         <div className="Bookings">
-        <h2>Estimated Time : {shortestTime}</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Sr.No</th>
-              <th>Cab</th>
-              <th>Price/minute</th>
-              <th>Total Fare</th>
-              <th>Cab Arrives in(Minutes)</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cabs.map((data, index) => (
-              <tr key={index}>
-                <th>{index + 1}</th>
-                <th>{data.cabId}</th>
-                <th>{data.price}</th>
-                <th>{data.price * shortestTime}</th>
-                <th>
-                  {findShortestTime(
-                    locations,
-                    srcdest[0],
-                    data.currentPosition
-                  )}
-                </th>
-                <th>
-                  <button onClick={() => BookCab(data.cabId)}>Book</button>
-                </th>
+          <h2>Estimated Time : {shortestTime}</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Sr.No</th>
+                <th>Cab</th>
+                <th>Price/minute</th>
+                <th>Total Fare</th>
+                <th>Cab Arrives in(Minutes)</th>
+                <th>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>)}
+            </thead>
+            <tbody>
+              {cabs.map((data, index) => (
+                <tr key={index}>
+                  <th>{index + 1}</th>
+                  <th>{data.cabId}</th>
+                  <th>{data.price}</th>
+                  <th>{data.price * shortestTime}</th>
+                  <th>
+                    {findShortestTime(
+                      locations,
+                      srcdest[0],
+                      data.currentPosition
+                    )}
+                  </th>
+                  <th>
+                    <button onClick={() => BookCab(data.cabId)}>Book</button>
+                  </th>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

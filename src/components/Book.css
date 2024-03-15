@@ -1,8 +1,7 @@
-/* Booking.css */
-
 body {
     background: linear-gradient(135deg, lightblue, #6495ED, #8A2BE2);
     font-family: Arial, sans-serif;
+    margin: 0;
 }
 
 h1 {
@@ -12,20 +11,16 @@ h1 {
 
 .container {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    height: 100vh;
-    padding: 10px;
-    margin: 10px;
+    flex-direction: column; 
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
 }
 
 form {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     gap: 10px;
-    margin: 0 ;
     max-width: 500px;
     background-color: #fff;
     padding: 30px;
@@ -33,16 +28,9 @@ form {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.image-container {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
 .image-container img {
-    height: 450px;
-    width: 80%;
+    max-width: 100%; 
+    height: auto;
     border-radius: 8px;
 }
 
@@ -81,8 +69,49 @@ button:hover {
 
 .Bookings {
     margin-top: 20px;
+    overflow-x: auto;
 }
 
-.Bookings p {
-    margin: 5px 0;
+.Bookings table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.Bookings th,
+.Bookings td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.Bookings th {
+    background-color: #f2f2f2;
+}
+
+.Bookings th:first-child,
+.Bookings td:first-child {
+    padding-left: 0;
+}
+
+.Bookings th:last-child,
+.Bookings td:last-child {
+    padding-right: 0;
+}
+
+@media only screen and (min-width: 768px) {
+    .container {
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: flex-start;
+    }
+
+    form {
+        flex: 1;
+    }
+
+    .image-container img {
+        max-width: 450px; 
+        width: auto;
+        height: auto;
+    }
 }
